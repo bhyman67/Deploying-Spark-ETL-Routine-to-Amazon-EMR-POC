@@ -1,8 +1,8 @@
-name: Terraform EMR ETL
+name: Spin Up Persistent EMR Cluster
 on: workflow_dispatch
 
 jobs:
-  apply:
+  spin-up-cluster:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
