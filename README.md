@@ -48,3 +48,5 @@ Spark jobs (the actual ETL code you want to run).
 Developer helper scripts (not production jobs).
 
 * **Get-EMRClusterInfo.ps1** → PowerShell script to fetch/export cluster details, configs, and steps into a single text file. Useful for debugging, documentation, and learning.
+ 
+ 
