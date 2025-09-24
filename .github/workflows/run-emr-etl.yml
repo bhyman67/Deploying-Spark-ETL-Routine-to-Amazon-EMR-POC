@@ -1,10 +1,6 @@
 name: Run EMR ETL
 on: workflow_dispatch
 
-permissions:
-  id-token: write
-  contents: read
-
 env:
   AWS_REGION: us-west-2
   S3_CODE_BUCKET: my-emr-etl-bucket-poc
@@ -23,11 +19,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # OIDC: assume a role in your AWS account (no long-lived secrets)
+      # Use AWS access keys from repository secrets
       - uses: aws-actions/configure-aws-credentials@v4
         with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-          role-to-assume: arn:aws:iam::146121144646:role/GitHubActionsDeployRole
 
       - name: Sync job code to S3
         run: |
