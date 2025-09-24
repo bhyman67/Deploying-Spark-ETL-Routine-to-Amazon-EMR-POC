@@ -1,6 +1,4 @@
-# Deploying-Spark-ETL-Routine-to-Amazon-EMR-POC
-
-
+# Deploying PySpark ETL Routine to Amazon EMR POC
 
 ## What This ETL Does
 
@@ -115,7 +113,6 @@ Terraform definitions for infrastructure.
 
 * **main.tf** → Defines the EMR cluster, instance groups, roles, steps, log URIs, etc.
 * **variables.tf** → Input variables for region, subnet, instance type, bucket names, roles, etc. Makes the infra reusable across environments.
-* **outputs.tf** → Exposes key info after `terraform apply` (cluster ID, master DNS, log URI, release label, ARN, apps installed) so pipelines/scripts can consume it.
 
 ### 📂 jobs/
 
