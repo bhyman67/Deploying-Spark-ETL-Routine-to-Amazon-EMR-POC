@@ -1,0 +1,67 @@
+name: Run EMR ETL
+on: workflow_dispatch
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-west-2
+  S3_CODE_BUCKET: my-emr-etl-bucket-poc
+  S3_CODE_PREFIX: jobs
+  EMR_RELEASE: emr-7.9.0
+  SUBNET_ID: subnet-06ea10d2d2e7afb5f
+  EMR_SERVICE_ROLE: EMR_DefaultRole
+  EMR_EC2_ROLE: EMR_EC2_DefaultRole
+  MASTER_SG: sg-0df472a0546e4cb57
+  CORE_SG: sg-0c757b1c82c8674b1
+  LOG_BUCKET: aws-logs-146121144646-us-west-2
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # OIDC: assume a role in your AWS account (no long-lived secrets)
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::146121144646:role/GitHubActionsDeployRole
+
+      - name: Sync job code to S3
+        run: |
+          aws s3 cp jobs/poc_etl_job.py s3://${S3_CODE_BUCKET}/${S3_CODE_PREFIX}/poc_etl_job.py
+
+      - name: Create EMR cluster with one Spark step
+        id: create
+        run: |
+          CLUSTER_ID=$(aws emr create-cluster \
+            --name "spark-etl-ci-${GITHUB_RUN_ID}" \
+            --release-label ${EMR_RELEASE} \
+            --applications Name=Hadoop Name=Spark \
+            --use-default-roles \
+            --log-uri s3n://${LOG_BUCKET}/elasticmapreduce/ \
+            --ec2-attributes SubnetId=${SUBNET_ID},EmrManagedMasterSecurityGroup=${MASTER_SG},EmrManagedSlaveSecurityGroup=${CORE_SG} \
+            --instance-type m5.xlarge --instance-count 3 \
+            --auto-terminate \
+            --steps Type=CUSTOM_JAR,Name="poc-etl-job",Jar=command-runner.jar,Args=["spark-submit","--deploy-mode","cluster","s3://${S3_CODE_BUCKET}/${S3_CODE_PREFIX}/poc_etl_job.py"] \
+            --query 'ClusterId' --output text)
+          echo "CLUSTER_ID=$CLUSTER_ID" >> $GITHUB_OUTPUT
+          echo "Created $CLUSTER_ID"
+
+      - name: Wait for step to finish
+        run: |
+          aws emr wait cluster-terminated --cluster-id ${{ steps.create.outputs.CLUSTER_ID }}
+          echo "Cluster terminated."
+
+      - name: Export run artifacts
+        run: |
+          mkdir -p artifacts
+          aws emr describe-cluster --cluster-id ${{ steps.create.outputs.CLUSTER_ID }} --output json > artifacts/cluster-details.json
+          aws emr list-steps      --cluster-id ${{ steps.create.outputs.CLUSTER_ID }} --output json > artifacts/steps.json
+          tar -czf artifacts.tgz artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: emr-run-artifacts
+          path: artifacts.tgz

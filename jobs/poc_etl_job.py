@@ -29,15 +29,39 @@ spark.sql(f"""
     TBLPROPERTIES ('skip.header.line.count'='1')
 """)
 
-# Run query
-results_df = spark.sql("""
-    SELECT *
-    FROM 2016_stock_data
-    WHERE vol > 10000
-    LIMIT 10
+# Define output path for the new table
+output_path = "s3://my-new-s3-bucket-bch/processed_data/"
+
+# Create and populate new table with query results using SQL
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS high_volume_stocks (
+        ticker STRING,
+        the_date STRING,
+        open DOUBLE,
+        high DOUBLE,
+        low DOUBLE,
+        close DOUBLE,
+        vol DOUBLE
+    )
+    USING PARQUET
+    LOCATION '{output_path}'
 """)
 
-# Show results in stdout
-results_df.show(truncate=False)
+# Insert query results into the new table
+spark.sql("""
+    INSERT OVERWRITE TABLE high_volume_stocks
+    SELECT ticker, the_date, open, high, low, close, vol
+    FROM 2016_stock_data
+    WHERE vol > 250000
+""")
+
+# Verify the data was written by showing a sample
+verification_df = spark.sql("""
+    SELECT COUNT(*) as total_records
+    FROM high_volume_stocks
+""")
+
+print("ETL job completed successfully!")
+verification_df.show()
 
 spark.stop()

@@ -3,6 +3,6 @@
 __pycache__/
 *.pyc
 .DS_Store
-*.docx
-*.yml
-*.yaml
+*.url
+*.txt
+.gitignore
