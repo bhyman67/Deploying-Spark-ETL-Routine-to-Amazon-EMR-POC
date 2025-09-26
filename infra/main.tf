@@ -27,10 +27,6 @@ resource "aws_emr_cluster" "etl" {
     instance_type = var.instance_type
     instance_count = 1
   }
-  task_instance_group {
-    instance_type = var.instance_type
-    instance_count = 1
-  }
 
   step_concurrency_level = 1
 
