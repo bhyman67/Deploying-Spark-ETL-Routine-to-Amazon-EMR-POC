@@ -126,3 +126,11 @@ Developer helper scripts (not production jobs).
 
 * **Get-EMRClusterInfo.ps1** → PowerShell script to fetch/export cluster details, configs, and steps into a single text file. Useful for debugging, documentation, and learning.
  
+## 📖 Project Publication
+
+### Visual Materials
+- `docs/Architecture Overview.jpg` - High-level system architecture diagram
+- `docs/MLOps_EMR_PySpark_Presentation.pdf` - Complete project presentation slides
+
+### Related Articles
+- [Medium Article](https://medium.com/bytepeak-engineering-llc/deploying-and-running-pyspark-etl-on-amazon-emr-1e284ea8c757) - Detailed walkthrough of the implementation
